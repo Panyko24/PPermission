@@ -45,7 +45,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.panyko.ppermission' //groupId 随便取
                 artifactId = 'ppermission'  //artifactId 随便取
-                version = '1.0.2'
+                version = '1.0.0'
             }
         }
     }
