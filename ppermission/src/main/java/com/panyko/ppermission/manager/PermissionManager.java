@@ -10,7 +10,9 @@ import androidx.core.content.ContextCompat;
 
 
 import com.panyko.ppermission.callback.PermissionCallback;
+import com.panyko.ppermission.utils.SystemUtils;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,7 +24,7 @@ public class PermissionManager {
     private static PermissionManager instance;
     public int requestCode;
     private PermissionCallback permissionCallback;
-    private Context context;
+    private WeakReference<Context> contextWeakReference;
 
     public static PermissionManager getInstance(Context context) {
         if (instance == null) {
@@ -37,11 +39,11 @@ public class PermissionManager {
 
     public PermissionManager(Context context) {
         requestCode = 0x001;
-        this.context = context;
+        contextWeakReference = new WeakReference<>(context);
     }
 
-    public boolean checkPermission(String permission) {
-        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+    public boolean isPermissionGranted(String permission) {
+        if (ContextCompat.checkSelfPermission(contextWeakReference.get(), permission) == PackageManager.PERMISSION_GRANTED) {
             return true;
         } else {
             return false;
@@ -57,7 +59,7 @@ public class PermissionManager {
      */
     public void requestPermission(Activity activity, PermissionCallback permissionCallback, String... permissions) {
         this.permissionCallback = permissionCallback;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (SystemUtils.isEqualsOrGreaterThanAndroid6()) {
             List<String> deniedPermissionList = new ArrayList<>();//未同意的权限列表
             List<String> grantedPermissionList = new ArrayList<>();//已同意的权限列表
             for (String permission : permissions) {
@@ -98,7 +100,7 @@ public class PermissionManager {
      */
     public void requestPermission(Activity activity, PermissionCallback permissionCallback, List<String> permissions) {
         this.permissionCallback = permissionCallback;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (SystemUtils.isEqualsOrGreaterThanAndroid6()) {
             List<String> deniedPermissionList = new ArrayList<>();
             for (String permission : permissions) {
                 if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
@@ -152,5 +154,12 @@ public class PermissionManager {
                 permissionCallback.onForeverDeniedAndPermissions(foreverDeniedList);
             }
         }
+    }
+
+    public void release() {
+        contextWeakReference.clear();
+        contextWeakReference = null;
+        permissionCallback = null;
+        instance = null;
     }
 }
